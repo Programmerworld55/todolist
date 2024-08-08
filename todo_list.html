@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .task-card {
+            margin-bottom: 20px;
+        }
+        .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            word-break: break-word;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .task-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .task-actions {
+            margin-left: 10px;
+        }
+        .task-number {
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        .total-tasks {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .task-actions i {
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 16px;
+            color: #007bff;
+        }
+        .task-actions i:hover {
+            color: #0056b3;
+        }
+        .header {
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .input-group .form-control {
+            border-radius: 0.25rem;
+        }
+        .input-group .btn {
+            border-radius: 0.25rem;
+        }
+        .important-task {
+            color: #ffca28;
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            .total-tasks {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="greeting">Hey, User!</h1>
+            <p class="lead">Here is your to-do list:</p>
+        </div>
+        <p id="totalTasks" class="total-tasks">Total Tasks: 0</p>
+
+        <div class="input-group mb-3">
+            <input type="text" id="taskInput" class="form-control" placeholder="Add a new task" aria-label="Add a new task">
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="button" onclick="addTask()">Add Task</button>
+            </div>
+        </div>
+
+        <h3 class="mt-4">Important Tasks</h3>
+        <ul id="importantTaskList" class="list-group"></ul>
+
+        <h3 class="mt-4">All Tasks</h3>
+        <ul id="taskList" class="list-group"></ul>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            initializeDatabase();
+
+            // Retrieve and display the user's name
+            const userName = localStorage.getItem('username') || 'User';
+            document.getElementById('greeting').innerText = `Hey, ${userName}!`;
+        });
+
+        let db;
+
+        function initializeDatabase() {
+            const request = indexedDB.open("todoDatabase", 1);
+
+            request.onerror = function(event) {
+                console.log("Database error: ", event.target.error);
+            };
+
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                loadTasks();
+            };
+
+            request.onupgradeneeded = function(event) {
+                db = event.target.result;
+                const objectStore = db.createObjectStore("tasks", { keyPath: "id", autoIncrement: true });
+                objectStore.createIndex("text", "text", { unique: false });
+                objectStore.createIndex("important", "important", { unique: false });
+            };
+        }
+
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            if (taskInput.value.trim() !== "") {
+                const task = {
+                    text: taskInput.value,
+                    important: false
+                };
+
+                const transaction = db.transaction(["tasks"], "readwrite");
+                const objectStore = transaction.objectStore("tasks");
+                const request = objectStore.add(task);
+
+                request.onsuccess = function(event) {
+                    taskInput.value = "";
+                    loadTasks();
+                };
+
+                request.onerror = function(event) {
+                    console.log("Error adding task: ", event.target.error);
+                };
+            }
+        }
+
+        function loadTasks() {
+            const taskList = document.getElementById('taskList');
+            const importantTaskList = document.getElementById('importantTaskList');
+            taskList.innerHTML = "";
+            importantTaskList.innerHTML = "";
+
+            const transaction = db.transaction(["tasks"]);
+            const objectStore = transaction.objectStore("tasks");
+
+            objectStore.openCursor().onsuccess = function(event) {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const task = cursor.value;
+                    const li = document.createElement('li');
+                    li.className = "list-group-item";
+                    li.innerHTML = `
+                        <span class="task-number">${cursor.key}.</span>
+                        <span class="task-text">${task.text}</span>
+                        <div class="task-actions">
+                            <i class="fas fa-star ${task.important ? 'important-task' : ''}" onclick="toggleImportant(${cursor.key})"></i>
+                            <i class="fas fa-edit" onclick="editTask(${cursor.key})"></i>
+                            <i class="fas fa-trash-alt" onclick="deleteTask(${cursor.key})"></i>
+                        </div>
+                    `;
+
+                    if (task.important) {
+                        importantTaskList.appendChild(li.cloneNode(true));
+                    }
+
+                    taskList.appendChild(li);
+                    cursor.continue();
+                }
+            };
+
+            transaction.oncomplete = function() {
+                updateTotalTasks();
+            };
+        }
+
+        function editTask(id) {
+            const transaction = db.transaction(["tasks"], "readwrite");
+            const objectStore = transaction.objectStore("tasks");
+            const request = objectStore.get(id);
+
+            request.onsuccess = function(event) {
+                const task = event.target.result;
+                const newTaskText = prompt("Edit task:", task.text);
+                if (newTaskText !== null) {
+                    task.text = newTaskText;
+                    const updateRequest = objectStore.put(task);
+
+                    updateRequest.onsuccess = function() {
+                        loadTasks();
+                    };
+
+                    updateRequest.onerror = function(event) {
+                        console.log("Error updating task: ", event.target.error);
+                    };
+                }
+            };
+
+            request.onerror = function(event) {
+                console.log("Error getting task: ", event.target.error);
+            };
+        }
+
+        function deleteTask(id) {
+            const transaction = db.transaction(["tasks"], "readwrite");
+            const objectStore = transaction.objectStore("tasks");
+            const request = objectStore.delete(id);
+
+            request.onsuccess = function() {
+                loadTasks();
+            };
+
+            request.onerror = function(event) {
+                console.log("Error deleting task: ", event.target.error);
+            };
+        }
+
+        function toggleImportant(id) {
+            const transaction = db.transaction(["tasks"], "readwrite");
+            const objectStore = transaction.objectStore("tasks");
+            const request = objectStore.get(id);
+
+            request.onsuccess = function(event) {
+                const task = event.target.result;
+                task.important = !task.important;
+                const updateRequest = objectStore.put(task);
+
+                updateRequest.onsuccess = function() {
+                    loadTasks();
+                };
+
+                updateRequest.onerror = function(event) {
+                    console.log("Error updating task: ", event.target.error);
+                };
+            };
+
+            request.onerror = function(event) {
+                console.log("Error getting task: ", event.target.error);
+            };
+        }
+
+        function updateTotalTasks() {
+            const transaction = db.transaction(["tasks"]);
+            const objectStore = transaction.objectStore("tasks");
+
+            objectStore.count().onsuccess = function(event) {
+                const count = event.target.result;
+                document.getElementById('totalTasks').innerText = `Total Tasks: ${count}`;
+            };
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+</body>
+</html>

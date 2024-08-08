@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .input-group {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .eye-icon {
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+        }
+        .btn-custom {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .or-separator {
+            margin: 2px 0;
+            font-weight: bold;
+        }
+        .or-separator span {
+            background-color: #ffffff;
+            padding: 0 5px;
+            /* margin-top: 0; */
+
+        }
+    </style>
+</head>
+<body>
+    <form id="loginForm">
+        <div class="login-container">
+            <h2>Login</h2>
+            <div class="input-group">
+                <input type="text" id="login_name" placeholder="Name" required />
+            </div>
+            <div class="input-group">
+                <input type="password" id="login_password" placeholder="Password" required />
+                <img src="close.png" alt="eye" class="eye-icon" onclick="togglePasswordVisibility('login_password')" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-custom" onclick="loginUser()">Login</button>
+            <div class="or-separator">
+                <span>OR</span>
+            </div>
+            <a href="register.html" class="btn btn-secondary btn-custom">Register</a>
+        </div>
+    </form>
+
+    <script src="script2.js"></script>
+</body>
+</html>

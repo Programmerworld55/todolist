@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .input-group {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .input-group input {
+            width: calc(100% - 30px);
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        .eye-icon {
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%);
+        }
+        .login-link {
+            display: block;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #007bff;
+        }
+        .login-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <form id="registerForm">
+        <div class="login-container">
+            <h2>Register</h2>
+            <div class="input-group">
+                <input type="text" id="register_name" placeholder="Name" required />
+            </div>
+            <div class="input-group">
+                <input type="email" id="register_email" placeholder="Email" required />
+            </div>
+            <div class="input-group">
+                <input type="tel" id="register_ph" placeholder="Phone Number" required />
+            </div>
+            <div class="input-group">
+                <input type="password" id="register_password" placeholder="Password" required />
+                <img src="close.png" alt="eye" class="eye-icon" onclick="togglePasswordVisibility('register_password')" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" onclick="registerUser()">Register</button>
+            <a href="login.html" class="login-link">Already have an account? Login</a>
+        </div>
+    </form>
+
+    <script src="script2.js"></script>
+</body>
+</html>
